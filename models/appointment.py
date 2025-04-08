@@ -1,15 +1,18 @@
-from sqlalchemy import Column, Integer, ForeignKey, DateTime, Enum
+from sqlalchemy import Column, ForeignKey, DateTime, Enum, String
 from sqlalchemy.orm import relationship
 from core.database import Base
 from core.enums import AppointmentStatusEnum
+from deps.utils import generate_uuid
 
 
 class Appointment(Base):
     __tablename__ = "appointments"
 
-    id = Column(Integer, primary_key=True)
-    doctor_id = Column(Integer, ForeignKey("doctors.id", ondelete="CASCADE"))
-    patient_id = Column(Integer, ForeignKey("patients.id", ondelete="CASCADE"))
+    id = Column(String(length=36), primary_key=True, index=True, default=generate_uuid)
+    doctor_id = Column(String(length=36), ForeignKey("doctors.id", ondelete="CASCADE"))
+    patient_id = Column(
+        String(length=36), ForeignKey("patients.id", ondelete="CASCADE")
+    )
     scheduled_time = Column(DateTime, nullable=False)
     status = Column(
         Enum(AppointmentStatusEnum), default=AppointmentStatusEnum.scheduled

@@ -27,6 +27,7 @@ async def get_users():
 
 @users_router.post("/new-user")
 async def register_new_user(user_data: UserRequest, db: DB_Dependency):
+    print("USER DATA: ", user_data)
     new_user = User(**user_data.model_dump())
     db.add(new_user)
     db.commit()
