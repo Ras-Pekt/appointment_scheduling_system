@@ -1,1 +1,6 @@
-fastapi==0.115.12
+fastapi[standard]
+pydantic-settings==2.8.1
+python-dotenv==1.1.0
+sqlalchemy==2.0.40
+pymysql==1.1.1
+cryptography==41.0.7
