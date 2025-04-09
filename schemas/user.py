@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from enum import Enum
 
 
@@ -20,11 +20,23 @@ class UserBase(BaseModel):
 
 
 class UserCreate(UserBase):
-    password: str = Field(..., min_length=8, description="User's password")
+    hashed_password: str = Field(..., min_length=8, description="User's password")
 
 
-class UserOut(UserBase):
+class AdminOut(UserBase):
+    id: str = Field(..., description="Admin's ID")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class UserOut(BaseModel):
     id: str = Field(..., description="User's ID")
+    email: EmailStr = Field(..., description="User's email address")
+    first_name: str = Field(
+        ..., min_length=2, max_length=50, description="User's first name"
+    )
+    last_name: str = Field(
+        ..., min_length=2, max_length=50, description="User's last name"
+    )
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)

@@ -1,5 +1,5 @@
-from pydantic import BaseModel, Field
-from schemas.user import UserOut
+from pydantic import BaseModel, ConfigDict, Field
+from schemas.user import UserCreate, UserOut
 
 
 class PatientBase(BaseModel):
@@ -11,13 +11,12 @@ class PatientBase(BaseModel):
     )
 
 
-class PatientCreate(PatientBase):
-    user_id: str = Field(..., description="Patient's ID")
+class PatientCreate(UserCreate, PatientBase):
+    pass
 
 
 class PatientOut(PatientBase):
     id: str = Field(..., description="Patient's ID")
     user: UserOut
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)

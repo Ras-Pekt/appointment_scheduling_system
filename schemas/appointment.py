@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from datetime import datetime
 
 
@@ -16,5 +16,4 @@ class AppointmentCreate(AppointmentBase):
 class AppointmentOut(AppointmentBase):
     id: str = Field(..., description="Appointment's ID")
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)

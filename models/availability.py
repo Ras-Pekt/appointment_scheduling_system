@@ -1,5 +1,4 @@
-from enum import Enum
-from sqlalchemy import Column, String, ForeignKey, Time
+from sqlalchemy import Column, String, ForeignKey, Time, Enum
 from sqlalchemy.orm import relationship
 from core.database import Base
 from core.enums import WeekdayEnum

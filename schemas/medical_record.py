@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional
 
 
@@ -16,5 +16,4 @@ class MedicalRecordCreate(MedicalRecordBase):
 class MedicalRecordOut(MedicalRecordBase):
     id: str = Field(..., description="Medical record's ID")
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
