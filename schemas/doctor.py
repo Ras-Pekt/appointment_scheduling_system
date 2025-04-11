@@ -1,4 +1,6 @@
+from typing import List
 from pydantic import BaseModel, ConfigDict, Field
+from schemas.availability import AvailabilitySlotResponse
 from schemas.user import UserCreate, UserOut
 
 
@@ -14,6 +16,7 @@ class DoctorCreate(UserCreate, DoctorBase):
 
 class DoctorOut(DoctorBase):
     id: str = Field(..., description="Doctor's ID")
+    availability: List[AvailabilitySlotResponse]
     user: UserOut
 
     model_config = ConfigDict(from_attributes=True)

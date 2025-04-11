@@ -1,13 +1,11 @@
-from typing import Union
 from fastapi import APIRouter, HTTPException, status
-from core.enums import RoleEnum
 from models.patient import Patient
 from models.doctor import Doctor
 from models.user import User
-from routers import DB_Dependency, create_user
+from routers import Admin_Dependency, DB_Dependency, create_user
 from schemas.doctor import DoctorCreate
 from schemas.patient import PatientCreate
-from schemas.user import AdminOut, UserCreate, UserOut
+from schemas.user import AdminOut, UserCreate
 
 users_router = APIRouter(
     prefix="/users",
@@ -15,8 +13,8 @@ users_router = APIRouter(
 )
 
 
-@users_router.get("/", response_model=list[AdminOut])
-async def get_all_users(db: DB_Dependency):
+@users_router.get("/")
+async def get_all_users(db: DB_Dependency, current_user: Admin_Dependency):
     """
     Retrieve all users from the database.
 
@@ -52,7 +50,7 @@ async def get_user_by_id(user_id: str, db: DB_Dependency):
     return user
 
 
-@users_router.post("/new-admin")
+@users_router.post("/new-admin", status_code=status.HTTP_201_CREATED)
 async def register_new_admin(user_data: UserCreate, db: DB_Dependency):
     """
     Register a new admin user.
@@ -74,7 +72,9 @@ async def register_new_admin(user_data: UserCreate, db: DB_Dependency):
 
 
 @users_router.post("/new-doctor")
-async def register_new_doctor(doctor_data: DoctorCreate, db: DB_Dependency):
+async def register_new_doctor(
+    doctor_data: DoctorCreate, db: DB_Dependency, current_user: Admin_Dependency
+):
     """
     Register a new doctor user.
 

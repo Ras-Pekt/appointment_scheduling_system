@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, Field, field_validator, validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from datetime import time
 
 from core.enums import WeekdayEnum
@@ -27,5 +27,12 @@ class AvailabilityCreate(AvailabilityBase):
 
 class AvailabilityOut(AvailabilityBase):
     id: str = Field(..., description="Availability's ID")
+    available: bool = Field(..., description="Availability status")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class AvailabilitySlotResponse(AvailabilityOut):
+    pass
 
     model_config = ConfigDict(from_attributes=True)

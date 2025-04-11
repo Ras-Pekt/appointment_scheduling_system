@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, ForeignKey, Time, Enum
+from sqlalchemy import Boolean, Column, String, ForeignKey, Time, Enum
 from sqlalchemy.orm import relationship
 from core.database import Base
 from core.enums import WeekdayEnum
@@ -13,5 +13,6 @@ class Availability(Base):
     weekday = Column(Enum(WeekdayEnum), nullable=False)
     start_time = Column(Time, nullable=False)
     end_time = Column(Time, nullable=False)
+    available = Column(Boolean, nullable=True)
 
     doctor = relationship("Doctor", back_populates="availability")
