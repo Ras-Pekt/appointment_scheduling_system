@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     EMAIL_ADDRESS: str
     EMAIL_PASSWORD: str
+    DEV_ENV: str
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

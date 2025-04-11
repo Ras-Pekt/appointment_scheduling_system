@@ -4,13 +4,16 @@ from sqlalchemy.orm import sessionmaker
 from core.config import settings
 from sqlalchemy.engine import URL
 
-url = URL.create(
-    "mysql+pymysql",
-    username=settings.MYSQL_USER,
-    password=settings.MYSQL_PASSWORD,
-    host=settings.MYSQL_HOST,
-    database=settings.MYSQL_DATABASE,
-)
+if settings.DEV_ENV != "test":
+    url = "mysql://root:QSgHXkJNyGhlqEXrpJAMPctVXWDNJbZg@switchyard.proxy.rlwy.net:16376/railway"
+else:
+    url = URL.create(
+        "mysql+pymysql",
+        username=settings.MYSQL_USER,
+        password=settings.MYSQL_PASSWORD,
+        host=settings.MYSQL_HOST,
+        database=settings.MYSQL_DATABASE,
+    )
 
 engine = create_engine(url)
 
