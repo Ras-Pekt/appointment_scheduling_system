@@ -29,9 +29,8 @@ def get_current_user(
         payload = jwt.decode(
             token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
         )
-        user_id: str = str(payload.get("sub"))
 
-        print("FROM GET CURRENT USER: ", user_id)
+        user_id: str = str(payload.get("sub"))
 
         user = db.query(User).filter(User.id == user_id).first()
         if not user:

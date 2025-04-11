@@ -5,15 +5,18 @@ from models.user import User
 from routers import Admin_Dependency, DB_Dependency, create_user
 from schemas.doctor import DoctorCreate
 from schemas.patient import PatientCreate
-from schemas.user import AdminOut, UserCreate
+from schemas.user import AdminOut, UserCreate, UserOut
+from tasks.email import send_welcome_email
 
 users_router = APIRouter(
-    prefix="/users",
-    tags=["users"],
+    prefix="/admin",
+    tags=["Admins"],
 )
 
 
-@users_router.get("/")
+@users_router.get(
+    "/all-users", response_model=list[UserOut], status_code=status.HTTP_200_OK
+)
 async def get_all_users(db: DB_Dependency, current_user: Admin_Dependency):
     """
     Retrieve all users from the database.
@@ -28,8 +31,12 @@ async def get_all_users(db: DB_Dependency, current_user: Admin_Dependency):
     return all_users
 
 
-@users_router.get("/{user_id}", response_model=AdminOut)
-async def get_user_by_id(user_id: str, db: DB_Dependency):
+@users_router.get(
+    "/user/{user_id}", response_model=AdminOut, status_code=status.HTTP_200_OK
+)
+async def get_user_by_id(
+    user_id: str, db: DB_Dependency, current_user: Admin_Dependency
+):
     """
     Retrieve a user by their ID.
 
@@ -50,7 +57,7 @@ async def get_user_by_id(user_id: str, db: DB_Dependency):
     return user
 
 
-@users_router.post("/new-admin", status_code=status.HTTP_201_CREATED)
+@users_router.post("/register-new-admin", status_code=status.HTTP_201_CREATED)
 async def register_new_admin(user_data: UserCreate, db: DB_Dependency):
     """
     Register a new admin user.
@@ -68,10 +75,13 @@ async def register_new_admin(user_data: UserCreate, db: DB_Dependency):
             detail="User role must be 'admin'",
         )
     create_user(user_data.model_dump(), db)
+
+    send_welcome_email.delay(email=user_data.email, first_name=user_data.first_name)
+
     return {"message": "Admin registered successfully"}
 
 
-@users_router.post("/new-doctor")
+@users_router.post("/register-new-doctor", status_code=status.HTTP_201_CREATED)
 async def register_new_doctor(
     doctor_data: DoctorCreate, db: DB_Dependency, current_user: Admin_Dependency
 ):
@@ -108,11 +118,15 @@ async def register_new_doctor(
     db.commit()
     db.refresh(new_doctor)
 
+    send_welcome_email.delay(email=doctor_data.email, first_name=doctor_data.first_name)
+
     return {"message": "Doctor registered successfully"}
 
 
-@users_router.post("/new-patient")
-async def register_new_patient(patient_data: PatientCreate, db: DB_Dependency):
+@users_router.post("/register-new-patient", status_code=status.HTTP_201_CREATED)
+async def register_new_patient(
+    patient_data: PatientCreate, db: DB_Dependency, current_user: Admin_Dependency
+):
     """
     Register a new patient user.
 
@@ -149,11 +163,13 @@ async def register_new_patient(patient_data: PatientCreate, db: DB_Dependency):
     db.commit()
     db.refresh(new_patient)
 
+    send_welcome_email(email=patient_data.email, first_name=patient_data.first_name)
+
     return {"message": "patient registered successfully"}
 
 
-@users_router.delete("/{user_id}")
-async def delete_user(user_id: str, db: DB_Dependency):
+@users_router.delete("/delete-user/{user_id}", status_code=status.HTTP_200_OK)
+async def delete_user(user_id: str, db: DB_Dependency, current_user: Admin_Dependency):
     """
     Delete a user by their ID.
 

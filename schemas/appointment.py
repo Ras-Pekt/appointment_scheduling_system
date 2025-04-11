@@ -1,8 +1,6 @@
 from pydantic import BaseModel, ConfigDict, Field
 from datetime import datetime
 
-from core.enums import WeekdayEnum
-
 
 class AppointmentBase(BaseModel):
     doctor_id: str = Field(..., description="Doctor's ID")

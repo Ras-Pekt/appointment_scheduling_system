@@ -1,23 +1,26 @@
 from typing import Optional
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException
+from starlette import status
 
 from models.appointment import Appointment
 from models.availability import Availability
 from models.doctor import Doctor
 from models.medical_record import MedicalRecord
 from routers import DB_Dependency, Doctor_Dependency
+from schemas.appointment import AppointmentOut
 from schemas.availability import AvailabilityCreate
 from schemas.doctor import DoctorOut
-from schemas.medical_record import MedicalRecordCreate
+from schemas.medical_record import MedicalRecordCreate, MedicalRecordOut
+from tasks.email import notify_new_medical_record_creation
 
 doctors_router = APIRouter(
     prefix="/doctors",
-    tags=["doctors"],
+    tags=["Doctors"],
 )
 
 
-@doctors_router.get("/me", response_model=DoctorOut)
-async def get_doctor(db: DB_Dependency, current_doctor: Doctor_Dependency):
+@doctors_router.get("/me", response_model=DoctorOut, status_code=status.HTTP_200_OK)
+async def view_doctor_profile(db: DB_Dependency, current_doctor: Doctor_Dependency):
     """
     Retrieve the current doctor's profile.
 
@@ -29,11 +32,22 @@ async def get_doctor(db: DB_Dependency, current_doctor: Doctor_Dependency):
         Doctor: The current doctor's profile.
     """
     current_doctor = db.query(Doctor).filter(Doctor.id == current_doctor.id).first()
+    if not current_doctor:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not Authorized to view this profile",
+        )
     return current_doctor
 
 
-@doctors_router.get("/all-doctors", response_model=list[DoctorOut])
-async def get_all_doctors(db: DB_Dependency, specilization: Optional[str] = None):
+@doctors_router.get(
+    "/all-doctors", response_model=list[DoctorOut], status_code=status.HTTP_200_OK
+)
+async def view_all_doctors(
+    db: DB_Dependency,
+    current_doctor: Doctor_Dependency,
+    specilization: Optional[str] = None,
+):
     """
     Retrieve all doctors from the database.
 
@@ -62,7 +76,7 @@ async def get_all_doctors(db: DB_Dependency, specilization: Optional[str] = None
     return all_doctors
 
 
-@doctors_router.post("/new-availability-slot")
+@doctors_router.post("/new-availability-slot", status_code=status.HTTP_201_CREATED)
 async def create_new_availability_slot(
     availability_data: AvailabilityCreate,
     db: DB_Dependency,
@@ -104,7 +118,9 @@ async def create_new_availability_slot(
     return {"message": "New availability slot created"}
 
 
-@doctors_router.patch("/availability/change-availability/{slot_id}")
+@doctors_router.patch(
+    "/availability/change-availability/{slot_id}", status_code=status.HTTP_200_OK
+)
 async def change_availability(
     slot_id: str,
     db: DB_Dependency,
@@ -150,7 +166,9 @@ async def change_availability(
     return {"message": "Availability status updated"}
 
 
-@doctors_router.delete("/availability/delete-availability/{slot_id}")
+@doctors_router.delete(
+    "/availability/delete-availability/{slot_id}", status_code=status.HTTP_200_OK
+)
 async def delete_availability(
     slot_id: str, db: DB_Dependency, current_doctor: Doctor_Dependency
 ):
@@ -180,8 +198,10 @@ async def delete_availability(
     return {"message": "Availability slot deleted"}
 
 
-@doctors_router.get("/appointments")
-async def get_doctor_appointments(db: DB_Dependency, current_doctor: Doctor_Dependency):
+@doctors_router.get(
+    "/appointments", response_model=list[AppointmentOut], status_code=status.HTTP_200_OK
+)
+async def view_all_appointments(db: DB_Dependency, current_doctor: Doctor_Dependency):
     """
     Retrieve the appointments for the current doctor.
 
@@ -198,7 +218,9 @@ async def get_doctor_appointments(db: DB_Dependency, current_doctor: Doctor_Depe
     return appointments
 
 
-@doctors_router.post("/new-medical-report/{appointment_id}")
+@doctors_router.post(
+    "/new-medical-report/{appointment_id}", status_code=status.HTTP_201_CREATED
+)
 async def create_new_medical_report(
     appointment_id: str,
     report_data: MedicalRecordCreate,
@@ -248,11 +270,19 @@ async def create_new_medical_report(
             detail=f"Failed to create medical record: {str(e)}",
         )
 
+    notify_new_medical_record_creation.delay(
+        email=appointment.patient.email, doctor_name=current_doctor.name
+    )
+
     return {"message": "New medical report created"}
 
 
-@doctors_router.get("/medical-records")
-async def get_doctor_medical_records(
+@doctors_router.get(
+    "/medical-records",
+    response_model=list[MedicalRecordOut],
+    status_code=status.HTTP_200_OK,
+)
+async def view_all_doctor_medical_records(
     db: DB_Dependency, current_doctor: Doctor_Dependency
 ):
     """
@@ -275,8 +305,12 @@ async def get_doctor_medical_records(
     return medical_records
 
 
-@doctors_router.get("/medical-records/{patient_id}")
-async def get_doctor_medical_records_by_patient_id(
+@doctors_router.get(
+    "/medical-records/{patient_id}",
+    response_model=list[MedicalRecordOut],
+    status_code=status.HTTP_200_OK,
+)
+async def view_all_medical_records_by_patient_id(
     patient_id: str, db: DB_Dependency, current_doctor: Doctor_Dependency
 ):
     """

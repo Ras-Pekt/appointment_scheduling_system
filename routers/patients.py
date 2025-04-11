@@ -1,4 +1,5 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException
+from starlette import status
 from core.enums import WeekdayEnum
 from models.appointment import Appointment
 from models.availability import Availability
@@ -6,18 +7,20 @@ from models.doctor import Doctor
 from models.medical_record import MedicalRecord
 from models.patient import Patient
 from routers import DB_Dependency, Patient_Dependency, create_user
-from schemas.appointment import AppointmentCreate
+from schemas.appointment import AppointmentCreate, AppointmentOut
 from schemas.availability import AvailabilitySlotResponse
 from schemas.doctor import DoctorOut
+from schemas.medical_record import MedicalRecordOut
 from schemas.patient import PatientCreate
+from tasks.email import notify_appointment_creation, send_welcome_email
 
 patients_router = APIRouter(
     prefix="/patients",
-    tags=["patients"],
+    tags=["Patients"],
 )
 
 
-@patients_router.post("/new-patient")
+@patients_router.post("/register-new-patient", status_code=status.HTTP_201_CREATED)
 async def register_new_patient(patient_data: PatientCreate, db: DB_Dependency):
     """
     Register a new patient user.
@@ -59,10 +62,14 @@ async def register_new_patient(patient_data: PatientCreate, db: DB_Dependency):
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
 
-    return {"message": "patient registered successfully", "new_patient": new_patient}
+    send_welcome_email.delay(
+        email=patient_data.email, first_name=patient_data.first_name
+    )
+
+    return {"message": "patient registered successfully"}
 
 
-@patients_router.post("/new-appointment")
+@patients_router.post("/create-new-appointment", status_code=status.HTTP_201_CREATED)
 async def create_new_appointment(
     appointment_data: AppointmentCreate,
     db: DB_Dependency,
@@ -138,11 +145,28 @@ async def create_new_appointment(
     db.commit()
     db.refresh(new_appointment)
 
-    return {"message": "New appointment created", "appointment_id": new_appointment.id}
+    notify_appointment_creation.delay(
+        email=patient.email,
+        doctor_name=new_appointment.doctor.name,
+        date_time=new_appointment.scheduled_start,
+    )
+
+    return {"message": "New appointment created"}
 
 
-@patients_router.get("/all-doctors")
-async def get_all_doctors(db: DB_Dependency):
+@patients_router.get(
+    "/view-all-doctors", response_model=list[DoctorOut], status_code=status.HTTP_200_OK
+)
+async def view_all_doctors(db: DB_Dependency, current_patient: Patient_Dependency):
+    """
+    Retrieve all doctors from the database.
+
+    Args:
+        db (DB_Dependency): The database dependency.
+
+    Returns:
+        list: A list of all doctors.
+    """
     all_doctors = db.query(Doctor).all()
     if not all_doctors:
         raise HTTPException(
@@ -152,8 +176,14 @@ async def get_all_doctors(db: DB_Dependency):
     return all_doctors
 
 
-@patients_router.get("/doctor/availability/{doctor_id}")
-async def get_doctor_availability(doctor_id: str, db: DB_Dependency):
+@patients_router.get(
+    "/doctor/availability/{doctor_id}",
+    response_model=list[AvailabilitySlotResponse],
+    status_code=status.HTTP_200_OK,
+)
+async def view_doctor_availability_by_doctor_id(
+    doctor_id: str, db: DB_Dependency, current_patient: Patient_Dependency
+):
     """
     Retrieve the availability slots for a doctor.
 
@@ -220,8 +250,12 @@ async def get_doctor_availability(doctor_id: str, db: DB_Dependency):
     return doctor_response
 
 
-@patients_router.get("/doctor/appointments")
-async def get_my_appointments(current_user: Patient_Dependency, db: DB_Dependency):
+@patients_router.get(
+    "/doctor/appointments",
+    response_model=list[AppointmentOut],
+    status_code=status.HTTP_200_OK,
+)
+async def view_my_appointments(current_user: Patient_Dependency, db: DB_Dependency):
     """
     Retrieve the appointments for the current patient.
 
@@ -238,8 +272,14 @@ async def get_my_appointments(current_user: Patient_Dependency, db: DB_Dependenc
     return appointments
 
 
-@patients_router.get("/doctor/appointments/{doctor_id}")
-async def get_doctor_appointments(doctor_id: str, db: DB_Dependency):
+@patients_router.get(
+    "/doctor/appointments/{doctor_id}",
+    response_model=list[AppointmentOut],
+    status_code=status.HTTP_200_OK,
+)
+async def view_all_appointments_by_doctor_id(
+    doctor_id: str, db: DB_Dependency, current_user: Patient_Dependency
+):
     """
     Retrieve the appointments for a specific doctor.
 
@@ -261,8 +301,12 @@ async def get_doctor_appointments(doctor_id: str, db: DB_Dependency):
     return appointments
 
 
-@patients_router.get("/medical-records/")
-async def get_medical_records(db: DB_Dependency, current_user: Patient_Dependency):
+@patients_router.get(
+    "/medical-records/",
+    response_model=list[MedicalRecordOut],
+    status_code=status.HTTP_200_OK,
+)
+async def view_all_medical_records(db: DB_Dependency, current_user: Patient_Dependency):
     """
     Retrieve the medical records for the current patient.
 
@@ -283,8 +327,12 @@ async def get_medical_records(db: DB_Dependency, current_user: Patient_Dependenc
     return medical_records
 
 
-@patients_router.get("/medical-records/{doctor_id}")
-async def get_medical_records_by_doctor_id(
+@patients_router.get(
+    "/medical-records/{doctor_id}",
+    response_model=list[MedicalRecordOut],
+    status_code=status.HTTP_200_OK,
+)
+async def view_all_medical_records_by_doctor_id(
     doctor_id: str, db: DB_Dependency, current_user: Patient_Dependency
 ):
     """

@@ -9,11 +9,27 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-p${MYSQL_ROOT_PASSWORD}",
+        ]
       interval: 10s
       timeout: 10s
       retries: 5
     restart: unless-stopped
+
+  redis:
+    image: redis:6
+    container_name: redis
+    ports:
+      - "6379:6379"
 
   fastapi:
     build:
@@ -29,6 +45,24 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_started
+
+  celery:
+    build:
+      context: .
+      dockerfile: Dockerfile.celery
+    container_name: celery_worker
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+
+    depends_on:
+      - redis
+      - fastapi
+    env_file:
+      - .env
+    volumes:
+      - .:/code
 
 volumes:
   mysql_data:
