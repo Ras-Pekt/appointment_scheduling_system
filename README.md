@@ -185,7 +185,7 @@ http://0.0.0.0:8000/docs
 - Chose **FastAPI** for async support, clean syntax, and OpenAPI docs.
 - Modular folder structure for scalability and maintainability.
 - Celery used to handle non-blocking async tasks (e.g., email).
-- PostgreSQL in production for advanced indexing and relational features.
+- MySQL in production for advanced indexing and relational features.
 
 ---
 
