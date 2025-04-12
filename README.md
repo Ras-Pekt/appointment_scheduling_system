@@ -9,7 +9,7 @@ A secure and scalable backend system for managing patients, doctors, and healthc
 - **Patient Management**: Register, view, and manage patient profiles with basic details and insurance information.
 - **Doctor Management**: Register and manage doctors with specializations and configurable availability schedules.
 - **Appointment Scheduling**: Book, list, and cancel appointments with real-time availability checks and conflict prevention.
-- **Medical Records (Bonus)**: Add and retrieve patient records linked to appointments with access control.
+- **Medical Records**: Add and retrieve patient records linked to appointments with access control.
 - **Authentication & Authorization**: Role-based access control using OAuth2 + JWT.
 - **Async Email Notifications**: Background task processing using Celery + Redis.
 
@@ -59,6 +59,11 @@ EMAIL_PASSWORD=<your_email_password>
 SECRET_KEY=<secret_key>
 ```
 
+**Note:** A default root admin account is created on initialization of the app. This account is required to create other Admin accounts (as only an Admin can create Admin accounts). The login details for this account are:
+
+- **Email:** Specified in `ADMIN_EMAIL`
+- **Password:** Specified in `ADMIN_PASSWORD`
+
 3. Run the app:
 
 ```bash
@@ -77,41 +82,62 @@ http://0.0.0.0:8000/docs
 
 ### 🔐 Auth
 
-| Endpoint      | Method | Description      |
-| ------------- | ------ | ---------------- |
-| `/auth/login` | POST   | Obtain JWT token |
+| Endpoint      | Method | Description             | Access |
+| ------------- | ------ | ----------------------- | ------ |
+| `/auth/login` | POST   | Obtain JWT access token | Public |
 
 ---
 
-### 🧝 Patients
+### 👤 Users (Admin Only)
 
-| Endpoint                 | Method | Description          |
-| ------------------------ | ------ | -------------------- |
-| `/patients/new-patient`  | POST   | Register new patient |
-| `/patients/{patient_id}` | GET    | Get patient profile  |
-| `/patients`              | GET    | List all patients    |
+| Endpoint             | Method | Description              |
+| -------------------- | ------ | ------------------------ |
+| `/users/`            | GET    | List all users           |
+| `/users/{user_id}`   | GET    | Retrieve a specific user |
+| `/users/new-admin`   | POST   | Register a new admin     |
+| `/users/new-doctor`  | POST   | Register a new doctor    |
+| `/users/new-patient` | POST   | Register a new patient   |
+| `/users/{user_id}`   | DELETE | Delete a user by ID      |
 
 ---
 
 ### 👨‍⚕️ Doctors
 
-| Endpoint               | Method | Description             |
-| ---------------------- | ------ | ----------------------- |
-| `/doctors/new-doctor`  | POST   | Register new doctor     |
-| `/doctors/{doctor_id}` | GET    | Get doctor profile      |
-| `/doctors`             | GET    | List all doctors        |
-| `/availability/`       | POST   | Set doctor availability |
+| Endpoint                                              | Method | Description                                       | Access      |
+| ----------------------------------------------------- | ------ | ------------------------------------------------- | ----------- |
+| `/doctors/me`                                         | GET    | Get the logged-in doctor's profile                | Doctor Only |
+| `/doctors/all-doctors`                                | GET    | List all doctors (optional specialization filter) | Public      |
+| `/doctors/appointments`                               | GET    | Get all appointments for logged-in doctor         | Doctor Only |
+| `/doctors/new-availability-slot`                      | POST   | Add new availability slots                        | Doctor Only |
+| `/doctors/availability/change-availability/{slot_id}` | PATCH  | Change availability slot status                   | Doctor Only |
+| `/doctors/availability/delete-availability/{slot_id}` | DELETE | Delete availability slot                          | Doctor Only |
+| `/doctors/new-medical-report/{appointment_id}`        | POST   | Create a new medical record                       | Doctor Only |
+| `/doctors/medical-records`                            | GET    | List all medical records created by doctor        | Doctor Only |
+| `/doctors/medical-records/{patient_id}`               | GET    | Get records for a specific patient                | Doctor Only |
 
 ---
 
-### 📅 Appointments
+### 🧑‍⚕️ Patients
 
-| Endpoint             | Method | Description                    |
-| -------------------- | ------ | ------------------------------ |
-| `/appointments`      | POST   | Book a new appointment         |
-| `/appointments/{id}` | GET    | Get details of one appointment |
-| `/appointments`      | GET    | List all appointments          |
-| `/appointments/{id}` | DELETE | Cancel an appointment          |
+| Endpoint                                    | Method | Description                                     | Access       |
+| ------------------------------------------- | ------ | ----------------------------------------------- | ------------ |
+| `/patients/register-new-patient`            | POST   | Self-register as a new patient                  | Public       |
+| `/patients/view-all-doctors`                | GET    | View all doctors                                | Patient Only |
+| `/patients/doctor/availability/{doctor_id}` | GET    | View availability of a specific doctor          | Patient Only |
+| `/patients/create-new-appointment`          | POST   | Create a new appointment                        | Patient Only |
+| `/patients/doctor/appointments`             | GET    | View all appointments booked by current patient | Patient Only |
+| `/patients/doctor/appointments/{doctor_id}` | GET    | View all appointments by doctor ID              | Patient Only |
+| `/patients/medical-records/`                | GET    | View all your medical records                   | Patient Only |
+| `/patients/medical-records/{doctor_id}`     | GET    | View medical records from a specific doctor     | Patient Only |
+
+---
+
+### 🗕️ Appointments
+
+| Endpoint            | Method | Description                                      | Access       |
+| ------------------- | ------ | ------------------------------------------------ | ------------ |
+| `/appointments`     | GET    | List all appointments for logged-in doctor       | Doctor Only  |
+| `/appointments/new` | POST   | Book a new appointment (with availability check) | Patient Only |
 
 ---
 
@@ -129,8 +155,7 @@ http://0.0.0.0:8000/docs
 - **Modular App Structure**: Organized per domain (`patients/`, `doctors/`, etc.)
 - **RBAC System**: Centralized logic in `deps/auth.py`
 - **Async Messaging**: Celery queues for non-blocking email tasks
-- **SQLite for Testing**: Lightweight test DB in CI
-- **PostgreSQL for Production**: Full relational support
+- **MySQL for Production**: Full relational support
 
 ---
 
@@ -164,13 +189,13 @@ http://0.0.0.0:8000/docs
 
 ## 👨‍💼 Author
 
-**[Your Full Name]**  
-_Junior Fullstack Developer_  
-📧 your.email@example.com  
-🔗 [GitHub Profile](https://github.com/your-username)
+**Wanjang'i Gituku**  
+_Fullstack Developer_  
+📧 wanjangi.gituku@gmail.com  
+🔗 [Portfolio](https://wanjangi-gituku.github.io/online-portfolio/)
 
 ---
 
 ## 📃 License
 
-MIT License - See `LICENSE` file for details.
+See [LICENSE](https://creativecommons.org/licenses/by-nc/4.0/) details.

@@ -8,6 +8,7 @@ from routers.auth import auth_router
 from core.database import Base, engine, SessionLocal
 from os import getenv
 from dotenv import load_dotenv
+from core.config import settings
 
 load_dotenv()
 
@@ -22,13 +23,12 @@ app.include_router(auth_router)
 SUPER_ADMIN_EMAIL = getenv("ADMIN_EMAIL")
 SUPER_ADMIN_PASSWORD = getenv("ADMIN_PASSWORD")
 
-print("SUPER_ADMIN_EMAIL: ", SUPER_ADMIN_EMAIL)
-print("SUPER_ADMIN_PASSWORD: ", SUPER_ADMIN_PASSWORD)
-
 if not SUPER_ADMIN_EMAIL or not SUPER_ADMIN_PASSWORD:
     raise ValueError("ADMIN_EMAIL and ADMIN_PASSWORD environment variables must be set")
 
-Base.metadata.drop_all(bind=engine)
+if settings.DEV_ENV == "test":
+    Base.metadata.drop_all(bind=engine)
+
 Base.metadata.create_all(bind=engine)
 
 db = SessionLocal()

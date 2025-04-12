@@ -58,7 +58,9 @@ async def get_user_by_id(
 
 
 @users_router.post("/register-new-admin", status_code=status.HTTP_201_CREATED)
-async def register_new_admin(user_data: UserCreate, db: DB_Dependency):
+async def register_new_admin(
+    user_data: UserCreate, db: DB_Dependency, current_user: Admin_Dependency
+):
     """
     Register a new admin user.
 
