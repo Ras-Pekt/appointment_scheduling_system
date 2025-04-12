@@ -33,15 +33,20 @@ Base.metadata.create_all(bind=engine)
 
 db = SessionLocal()
 
-super_admin = User(
-    email=SUPER_ADMIN_EMAIL,
-    first_name="Super",
-    last_name="Admin",
-    hashed_password=hash_password(SUPER_ADMIN_PASSWORD),
-    role="admin",
-)
+existing_admin = db.query(User).filter(User.email == SUPER_ADMIN_EMAIL).first()
 
-db.add(super_admin)
-db.flush()
-db.commit()
-db.close()
+if not existing_admin:
+    try:
+        super_admin = User(
+            email=SUPER_ADMIN_EMAIL,
+            first_name="Super",
+            last_name="Admin",
+            hashed_password=hash_password(SUPER_ADMIN_PASSWORD),
+            role="admin",
+        )
+
+        db.add(super_admin)
+        db.flush()
+        db.commit()
+    finally:
+        db.close()
