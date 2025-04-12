@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     EMAIL_ADDRESS: str
     EMAIL_PASSWORD: str
     DEV_ENV: str
+    PROD_DB: str
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

@@ -5,7 +5,7 @@ from core.config import settings
 from sqlalchemy.engine import URL
 
 if settings.DEV_ENV != "test":
-    url = "mysql://root:QSgHXkJNyGhlqEXrpJAMPctVXWDNJbZg@switchyard.proxy.rlwy.net:16376/railway"
+    url = settings.PROD_DB
 else:
     url = URL.create(
         "mysql+pymysql",
