@@ -59,10 +59,13 @@ EMAIL_PASSWORD=<your_email_password>
 SECRET_KEY=<secret_key>
 ```
 
-**Note:** A default root admin account is created on initialization of the app. This account is required to create other Admin accounts (as only an Admin can create Admin accounts). The login details for this account are:
+**Note:**
+A default root admin account is created on initialization of the app. This account is required to create other Admin accounts (as only an Admin can create Admin accounts). The login details for this account are:
 
 - **Email:** Specified in `ADMIN_EMAIL`
 - **Password:** Specified in `ADMIN_PASSWORD`
+
+Additionally, refer to your Email provider's documentation on how to configure an app-specific password, to be set in the `EMAIL_PASSWORD` to enable the app to send emails
 
 3. Run the app:
 
