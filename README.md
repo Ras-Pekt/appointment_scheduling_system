@@ -1,6 +1,6 @@
 # 🏥 Healthcare Appointment Scheduling System
 
-A secure and scalable backend system for managing patients, doctors, and healthcare appointments. This project leverages **FastAPI**, **PostgreSQL**, and **Celery with Redis** for asynchronous processing to deliver a robust solution for real-world healthcare workflows.
+A secure and scalable backend system for managing patients, doctors, and healthcare appointments. This project leverages **FastAPI**, **MySQL**, and **Celery with Redis** for asynchronous processing to deliver a robust solution for real-world healthcare workflows.
 
 ---
 
@@ -59,13 +59,27 @@ EMAIL_PASSWORD=<your_email_password>
 SECRET_KEY=<secret_key>
 ```
 
-**Note:**
-A default root admin account is created on initialization of the app. This account is required to create other Admin accounts (as only an Admin can create Admin accounts). The login details for this account are:
+### 🛠️ Environment Variables
 
-- **Email:** Specified in `ADMIN_EMAIL`
-- **Password:** Specified in `ADMIN_PASSWORD`
+| Variable              | Description                                                                   |
+| --------------------- | ----------------------------------------------------------------------------- |
+| `MYSQL_ROOT_PASSWORD` | Password for the MySQL root user (used internally by the database container). |
+| `MYSQL_USER`          | Custom MySQL user for the app (used by the backend to connect to the DB).     |
+| `MYSQL_PASSWORD`      | Password for the above MySQL app user.                                        |
+| `MYSQL_DATABASE`      | Name of the database the app will use.                                        |
+| `ADMIN_EMAIL`         | Email address for the default admin account (created on first run).           |
+| `ADMIN_PASSWORD`      | Password for the default admin account.                                       |
+| `EMAIL_ADDRESS`       | Sender email address used for notifications (e.g. appointment confirmations). |
+| `EMAIL_PASSWORD`      | App-specific password or SMTP password for the sender email.                  |
+| `SECRET_KEY`          | Secret key for signing JWT tokens and other cryptographic operations.         |
 
-Additionally, refer to your Email provider's documentation on how to configure an app-specific password, to be set in the `EMAIL_PASSWORD` to enable the app to send emails
+> 📌 **Note:**  
+> A default root admin account is created when the app is first initialized. This account is required to create additional admin users, as **only an admin can create other admin accounts**.
+>
+> - **Email:** Defined in the `ADMIN_EMAIL` environment variable
+> - **Password:** Defined in the `ADMIN_PASSWORD` environment variable
+>
+> 💡 Additionally, to enable email functionality, refer to your email provider’s documentation on how to configure an **app-specific password**. This should be set in the `EMAIL_PASSWORD` variable.
 
 3. Run the app:
 
@@ -93,14 +107,14 @@ http://0.0.0.0:8000/docs
 
 ### 👤 Users (Admin Only)
 
-| Endpoint             | Method | Description              |
-| -------------------- | ------ | ------------------------ |
-| `/users/`            | GET    | List all users           |
-| `/users/{user_id}`   | GET    | Retrieve a specific user |
-| `/users/new-admin`   | POST   | Register a new admin     |
-| `/users/new-doctor`  | POST   | Register a new doctor    |
-| `/users/new-patient` | POST   | Register a new patient   |
-| `/users/{user_id}`   | DELETE | Delete a user by ID      |
+| Endpoint                       | Method | Description              |
+| ------------------------------ | ------ | ------------------------ |
+| `/users/all-users`             | GET    | List all users           |
+| `/users/user/{user_id}`        | GET    | Retrieve a specific user |
+| `/users/register-new-admin`    | POST   | Register a new admin     |
+| `/users/register-new-doctor`   | POST   | Register a new doctor    |
+| `/users/register-new-patient`  | POST   | Register a new patient   |
+| `/users/delete-user/{user_id}` | DELETE | Delete a user by ID      |
 
 ---
 
@@ -132,24 +146,6 @@ http://0.0.0.0:8000/docs
 | `/patients/doctor/appointments/{doctor_id}` | GET    | View all appointments by doctor ID              | Patient Only |
 | `/patients/medical-records/`                | GET    | View all your medical records                   | Patient Only |
 | `/patients/medical-records/{doctor_id}`     | GET    | View medical records from a specific doctor     | Patient Only |
-
----
-
-### 🕕 Appointments
-
-| Endpoint            | Method | Description                                      | Access       |
-| ------------------- | ------ | ------------------------------------------------ | ------------ |
-| `/appointments`     | GET    | List all appointments for logged-in doctor       | Doctor Only  |
-| `/appointments/new` | POST   | Book a new appointment (with availability check) | Patient Only |
-
----
-
-### 📄 Medical Records (Bonus)
-
-| Endpoint                                           | Method | Description                 |
-| -------------------------------------------------- | ------ | --------------------------- |
-| `/medical-records/new-medical-report/{patient_id}` | POST   | Create new medical record   |
-| `/medical-records/{patient_id}`                    | GET    | Get patient medical records |
 
 ---
 
